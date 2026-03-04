@@ -61,3 +61,7 @@ Run `main.py` to start the translator.
 
 ## 📄 License
 This project is licensed under the MIT License.
+This project is based on the original work by dgovor:
+https://github.com/dgovor/Sign-Language-Translator
+
+Modifications and improvements by IppiliSahasra08.
