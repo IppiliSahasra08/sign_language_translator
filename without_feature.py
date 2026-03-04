@@ -8,10 +8,15 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, classification_report
 from tensorflow.keras.utils import to_categorical
 from itertools import product
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import joblib
+import matplotlib.pyplot as plt
 
-# Load data
+DATA_PATH = "data"
+actions = ["hello", "help", "please", "sorry", "thank_you"]
 PATH = os.path.join('data')
-actions = np.array(os.listdir(PATH))
+
 sequences = 30
 frames = 10
 
@@ -32,12 +37,44 @@ Y = to_categorical(labels).astype(int)
 # Flatten for traditional ML
 X_flat = X.reshape(X.shape[0], -1)
 
-X_train, X_test, Y_train, Y_test = train_test_split(
-    X_flat, Y, test_size=0.2, random_state=42, stratify=np.argmax(Y, axis=1)
-)
+no_sequences = 30
+sequence_length = 30
 
-Y_train_labels = np.argmax(Y_train, axis=1)
-Y_test_labels = np.argmax(Y_test, axis=1)
+X_train = []
+X_test = []
+Y_train = []
+Y_test = []
+
+for action_idx, action in enumerate(actions):
+    for sequence in range(no_sequences):
+
+        window = []
+
+        for frame_num in range(sequence_length):
+            npy_path = os.path.join(DATA_PATH, action, str(sequence), f"{frame_num}.npy")
+            res = np.load(npy_path)
+            window.append(res)
+
+        window = np.array(window).flatten()
+
+        # 🔹 SEQUENCE-WISE SPLIT (80% train, 20% test)
+        if sequence < 24:
+            X_train.append(window)
+            Y_train.append(action_idx)
+        else:
+            X_test.append(window)
+            Y_test.append(action_idx)
+
+# Convert to numpy arrays
+X_train = np.array(X_train)
+X_test = np.array(X_test)
+Y_train = np.array(Y_train)
+Y_test = np.array(Y_test)
+
+print("Train shape:", X_train.shape)
+print("Test shape:", X_test.shape)
+Y_train_labels = Y_train
+Y_test_labels = Y_test
 
 print("=" * 60)
 print("WITHOUT FEATURE EXTRACTION (Raw Data)")
@@ -48,8 +85,19 @@ print(f"Input Shape: {X_flat.shape}")
 rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
 rf_model.fit(X_train, Y_train_labels)
 rf_pred = rf_model.predict(X_test)
+cm_rf = confusion_matrix(Y_test_labels, rf_pred)
+
+plt.figure(figsize=(8,6))
+sns.heatmap(cm_rf, annot=True, fmt='d', cmap='Blues',
+            xticklabels=actions, yticklabels=actions)
+plt.title("Confusion Matrix - Random Forest (Raw)")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.savefig("cm_rf_raw.png", dpi=150)
 rf_accuracy = accuracy_score(Y_test_labels, rf_pred)
 print(f"\nRandom Forest Accuracy: {rf_accuracy:.4f}")
+joblib.dump(rf_model, "rf_model.pkl")
+np.save('actions.npy', actions)
 
 # SVM
 scaler = StandardScaler()

@@ -71,6 +71,15 @@ Y_test_labels_f = np.argmax(Y_test_f, axis=1)
 rf_model_f = RandomForestClassifier(n_estimators=100, random_state=42)
 rf_model_f.fit(X_train_f, Y_train_labels_f)
 rf_pred_f = rf_model_f.predict(X_test_f)
+cm_rf_f = confusion_matrix(Y_test_labels_f, rf_pred_f)
+
+plt.figure(figsize=(8,6))
+sns.heatmap(cm_rf_f, annot=True, fmt='d', cmap='Greens',
+            xticklabels=actions, yticklabels=actions)
+plt.title("Confusion Matrix - Random Forest (With Features)")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.savefig("cm_rf_features.png", dpi=150)
 rf_accuracy_f = accuracy_score(Y_test_labels_f, rf_pred_f)
 print(f"\nRandom Forest (with Features) Accuracy: {rf_accuracy_f:.4f}")
 
@@ -91,9 +100,9 @@ print("COMPARISON SUMMARY")
 print("=" * 60)
 print(f"{'Model':<20} {'Without Features':<20} {'With Features':<20}")
 print("-" * 60)
-print(f"{'Random Forest':<20} {rf_accuracy_f:.4f}{'':<15} {rf_accuracy:.4f}")
-print(f"{'SVM':<20} {svm_accuracy_f:.4f}{'':<15} {svm_accuracy:.4f}")
+print(f"{'Random Forest':<20} {rf_accuracy:.4f}{'':<15} {rf_accuracy_f:.4f}")
+print(f"{'SVM':<20} {svm_accuracy:.4f}{'':<15} {svm_accuracy_f:.4f}")
 
-improvement_rf = ((rf_accuracy - rf_accuracy_f) / rf_accuracy_f) * 100
-improvement_svm = ((svm_accuracy - svm_accuracy_f) / svm_accuracy_f) * 100
+improvement_rf = ((rf_accuracy_f - rf_accuracy) / rf_accuracy) * 100
+improvement_svm = ((svm_accuracy_f - svm_accuracy) / svm_accuracy) * 100
 print(f"\nImprovement with Features: RF={improvement_rf:.2f}%, SVM={improvement_svm:.2f}%")
