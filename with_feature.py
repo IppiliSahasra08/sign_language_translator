@@ -1,3 +1,30 @@
+import numpy as np
+import os
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+from itertools import product
+from tensorflow.keras.utils import to_categorical
+import joblib
+
+# Configuration
+DATA_PATH = "data"
+actions = ["hello", "help", "please", "sorry", "thank_you"]
+PATH = os.path.join('data')
+sequences = 30
+frames = 10
+
+label_map = {label: num for num, label in enumerate(actions)}
+Y = []
+for action in actions:
+    for sequence in range(sequences):
+        Y.append(label_map[action])
+Y = to_categorical(Y).astype(int)
+
 # Feature Extraction Functions
 def extract_features(keypoints_sequence):
     """
@@ -96,13 +123,16 @@ print(f"SVM (with Features) Accuracy: {svm_accuracy_f:.4f}")
 
 # Comparison Summary
 print("\n" + "=" * 60)
-print("COMPARISON SUMMARY")
+print("ACCURACY SUMMARY (With Features)")
 print("=" * 60)
-print(f"{'Model':<20} {'Without Features':<20} {'With Features':<20}")
-print("-" * 60)
-print(f"{'Random Forest':<20} {rf_accuracy:.4f}{'':<15} {rf_accuracy_f:.4f}")
-print(f"{'SVM':<20} {svm_accuracy:.4f}{'':<15} {svm_accuracy_f:.4f}")
 
-improvement_rf = ((rf_accuracy_f - rf_accuracy) / rf_accuracy) * 100
-improvement_svm = ((svm_accuracy_f - svm_accuracy) / svm_accuracy) * 100
-print(f"\nImprovement with Features: RF={improvement_rf:.2f}%, SVM={improvement_svm:.2f}%")
+print(f"{'Model':<20} {'Accuracy':<20}")
+print("-" * 40)
+print(f"{'Random Forest':<20} {rf_accuracy_f:.4f}")
+print(f"{'SVM':<20} {svm_accuracy_f:.4f}")
+
+# Save models
+joblib.dump(rf_model_f, "rf_model_features.pkl")
+joblib.dump(scaler_f, "scaler_features.pkl")
+np.save('actions.npy', actions)
+print("\nModels saved: rf_model_features.pkl, scaler_features.pkl, actions.npy")
